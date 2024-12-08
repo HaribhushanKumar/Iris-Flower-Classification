@@ -1,0 +1,95 @@
+# Importing necessary libraries 
+import numpy as np 
+import pandas as pd 
+import matplotlib.pyplot as plt 
+import seaborn as sns 
+from sklearn.datasets import load_iris 
+from sklearn.model_selection import train_test_split 
+from sklearn.preprocessing import StandardScaler 
+from sklearn.neighbors import KNeighborsClassifier 
+from sklearn.svm import SVC 
+from sklearn.metrics import accuracy_score, confusion_matrix, classification_report 
+
+# Load the Iris dataset 
+iris = load_iris() 
+data = pd.DataFrame(iris.data, columns=iris.feature_names) 
+data['species'] = iris.target 
+data['species'] = data['species'].map({0: 'setosa', 1: 'versicolor', 2: 
+'virginica'}) 
+
+# Display dataset overview 
+print(data.head()) 
+print(data.info()) 
+
+# Visualizing relationships between features 
+sns.pairplot(data, hue='species', diag_kind='kde', markers=["o", "s", "D"]) 
+plt.show() 
+
+# Correlation heatmap 
+plt.figure(figsize=(8, 6)) 
+sns.heatmap(data.corr(), annot=True, cmap='coolwarm') 
+plt.title('Correlation Heatmap') 
+plt.show() 
+ 
+# Splitting the dataset into features (X) and target (y) 
+X = data.drop(columns=['species']) 
+y = iris.target 
+ 
+# Standardize the features 
+scaler = StandardScaler() 
+X_scaled = scaler.fit_transform(X) 
+ 
+# Splitting the dataset into training and testing sets 
+X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, 
+test_size=0.2, random_state=42) 
+ 
+# Train a K-Nearest Neighbors (KNN) model 
+knn_model = KNeighborsClassifier(n_neighbors=5) 
+knn_model.fit(X_train, y_train) 
+ 
+# Predict with KNN 
+y_pred_knn = knn_model.predict(X_test) 
+ 
+# Evaluate the KNN model 
+print("K-Nearest Neighbors Model Evaluation:") 
+print(f"Accuracy: {accuracy_score(y_test, y_pred_knn):.2f}") 
+print("Confusion Matrix:") 
+print(confusion_matrix(y_test, y_pred_knn)) 
+print("Classification Report:") 
+print(classification_report(y_test, y_pred_knn)) 
+ 
+# Train a Support Vector Machine (SVM) model 
+svm_model = SVC(kernel='linear', random_state=42) 
+svm_model.fit(X_train, y_train) 
+ 
+# Predict with SVM 
+y_pred_svm = svm_model.predict(X_test) 
+ 
+# Evaluate the SVM model 
+print("\nSupport Vector Machine Model Evaluation:") 
+print(f"Accuracy: {accuracy_score(y_test, y_pred_svm):.2f}") 
+print("Confusion Matrix:") 
+print(confusion_matrix(y_test, y_pred_svm)) 
+print("Classification Report:") 
+print(classification_report(y_test, y_pred_svm)) 
+
+# Visualize decision boundaries for KNN (2 features for simplicity) 
+from matplotlib.colors import ListedColormap 
+ 
+def plot_decision_boundary(model, X, y, title, feature_indices=[0, 1]): 
+    X_plot = X[:, feature_indices] 
+    x_min, x_max = X_plot[:, 0].min() - 1, X_plot[:, 0].max() + 1 
+    y_min, y_max = X_plot[:, 1].min() - 1, X_plot[:, 1].max() + 1 
+    xx, yy = np.meshgrid(np.arange(x_min, x_max, 0.01), np.arange(y_min, y_max, 0.01)) 
+    Z = model.predict(np.c_[xx.ravel(), yy.ravel()]) 
+    Z = Z.reshape(xx.shape) 
+    plt.figure(figsize=(8, 6)) 
+    plt.contourf(xx, yy, Z, alpha=0.3, cmap=ListedColormap(['#FFAAAA', '#AAFFAA', '#AAAAFF'])) 
+    plt.scatter(X_plot[:, 0], X_plot[:, 1], c=y, edgecolor='k', cmap=ListedColormap(['#FF0000', '#00FF00', '#0000FF'])) 
+    plt.title(title) 
+    plt.xlabel(iris.feature_names[feature_indices[0]]) 
+    plt.ylabel(iris.feature_names[feature_indices[1]]) 
+    plt.show() 
+
+# Plot decision boundary for KNN using the first two features 
+plot_decision_boundary(knn_model, X_scaled, y, title="Decision Boundary (KNN)", feature_indices=[0, 1])
